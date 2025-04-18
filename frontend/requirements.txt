@@ -1,0 +1,3 @@
+gradio
+requests
+numpy # Might be needed by gradio or for audio handling

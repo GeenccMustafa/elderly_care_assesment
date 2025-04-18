@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: classroom-backend
+    ports:
+      - "8000:8000" # Expose backend API port to host
+    volumes:
+      # Mount code for development hot-reloading (optional, remove for production build)
+      # - ./backend/app:/app/app
+      # Mount data, vector store, and mlflow runs so backend can access them
+      - ./data:/app/data:ro # Read-only data access
+      - ./vector_store_local:/app/vector_store_local # Needs write access if indexing happens here
+      - ./mlruns:/app/mlruns # Needs write access for logging
+      - ./.env:/app/.env:ro # Mount environment variables file
+    environment:
+      # Pass environment variables if not using .env file mount or want to override
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY} # Requires GOOGLE_API_KEY in host env
+      - PYTHONUNBUFFERED=1 # Ensure logs appear immediately
+    # networks: # Define if needed, default bridge usually works for simple cases
+    #   - caption-net
+
+  frontend:
+    build: ./frontend
+    container_name: classroom-frontend
+    ports:
+      - "7860:7860" # Expose Gradio UI port to host
+    volumes:
+      # Mount code for development hot-reloading (optional)
+      # - ./frontend/app.py:/app/app.py
+      - ./.env:/app/.env:ro # May not be needed if BACKEND_API_URL is set via env below
+    environment:
+      # Explicitly set the backend URL for the container network
+      - BACKEND_API_URL=http://backend:8000/api/process_audio
+      - PYTHONUNBUFFERED=1
+    depends_on: # Wait for backend to be conceptually ready (doesn't guarantee service inside is up)
+      - backend
+    # networks:
+    #   - caption-net
+
+# Optional network definition
+# networks:
+#   caption-net:
+#     driver: bridge

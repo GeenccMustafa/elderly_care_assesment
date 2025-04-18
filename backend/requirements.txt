@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard] # Includes websockets support if needed later
+python-dotenv
+faster-whisper
+torch # Or torch-cpu depending on your setup
+llama-index
+llama-index-embeddings-huggingface
+sentence-transformers
+google-generativeai
+mlflow
+numpy
+soundfile # To read audio files easily
