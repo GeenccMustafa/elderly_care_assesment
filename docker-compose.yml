@@ -1,45 +1,68 @@
+# docker-compose.yml (Place in project root)
 version: '3.8'
 
 services:
   backend:
-    build: ./backend
-    container_name: classroom-backend
+    build: ./backend # Path to the directory containing the backend Dockerfile
+    container_name: elderly-care-backend-app
+    image: elderly-care-backend:latest # Optional: Tag the built image
+    restart: unless-stopped
     ports:
-      - "8000:8000" # Expose backend API port to host
+      - "8000:8000" # Map host port 8000 to container port 8000 (FastAPI default)
     volumes:
-      # Mount code for development hot-reloading (optional, remove for production build)
-      # - ./backend/app:/app/app
-      # Mount data, vector store, and mlflow runs so backend can access them
-      - ./data:/app/data:ro # Read-only data access
-      - ./vector_store_local:/app/vector_store_local # Needs write access if indexing happens here
-      - ./mlruns:/app/mlruns # Needs write access for logging
-      - ./.env:/app/.env:ro # Mount environment variables file
+      # Mount persistent data directories from the host to the container
+      # Assumes the paths in backend/app/config.py resolve relative to /code inside the container
+      - ./data:/code/data # Mounts person_data and personal_documents
+      - ./vector_store_personal:/code/vector_store_personal # Mounts the built index
+      - ./mlruns:/code/mlruns # Mounts MLflow runs
     environment:
-      # Pass environment variables if not using .env file mount or want to override
-      # - GOOGLE_API_KEY=${GOOGLE_API_KEY} # Requires GOOGLE_API_KEY in host env
-      - PYTHONUNBUFFERED=1 # Ensure logs appear immediately
-    # networks: # Define if needed, default bridge usually works for simple cases
-    #   - caption-net
+      # Pass the Google API Key from the host environment or a .env file
+      # IMPORTANT: Define GOOGLE_API_KEY in your terminal environment or in a .env file
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      # Add any other environment variables needed by the backend config here
+    networks:
+      - elderly_care_net
 
   frontend:
-    build: ./frontend
-    container_name: classroom-frontend
+    build: ./frontend # Path to the directory containing the frontend Dockerfile
+    container_name: elderly-care-frontend-app
+    image: elderly-care-frontend:latest # Optional: Tag the built image
+    restart: unless-stopped
     ports:
-      - "7860:7860" # Expose Gradio UI port to host
-    volumes:
-      # Mount code for development hot-reloading (optional)
-      # - ./frontend/app.py:/app/app.py
-      - ./.env:/app/.env:ro # May not be needed if BACKEND_API_URL is set via env below
+      - "7860:7860" # Map host port 7860 to container port 7860 (Gradio default)
+    depends_on:
+      - backend # Wait for the backend service to start (doesn't guarantee readiness)
     environment:
-      # Explicitly set the backend URL for the container network
-      - BACKEND_API_URL=http://backend:8000/api/process_audio
-      - PYTHONUNBUFFERED=1
-    depends_on: # Wait for backend to be conceptually ready (doesn't guarantee service inside is up)
-      - backend
-    # networks:
-    #   - caption-net
+      # Tell the frontend where to find the backend API
+      # Uses the service name 'backend' and its internal port '8000'
+      - BACKEND_BASE_URL=http://backend:8000
+      # Configure Gradio server settings (as used in frontend/app.py)
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      # Optional: Define the MLflow UI URL if different from default
+      # - MLFLOW_UI_URL=${MLFLOW_UI_URL:-http://localhost:5000} # Example with default
+    networks:
+      - elderly_care_net
 
-# Optional network definition
-# networks:
-#   caption-net:
-#     driver: bridge
+networks:
+  elderly_care_net:
+    driver: bridge
+
+# NOTE:
+# 1. GOOGLE_API_KEY: You MUST provide your Google API key. You can do this by:
+#    a) Creating a file named '.env' in the same directory as this docker-compose.yml file
+#       with the following content:
+#       GOOGLE_API_KEY=your_actual_google_api_key_here
+#    b) OR, exporting it in your terminal BEFORE running docker-compose up:
+#       export GOOGLE_API_KEY="your_actual_google_api_key_here"
+#       docker-compose up --build
+#
+# 2. build_index.py: This script MUST be run manually *before* starting the services
+#    if you add/change documents in `data/personal_documents` or change the embedding model.
+#    Run it from the project root:
+#    python build_index.py
+#    If the index directory (`vector_store_personal`) already exists, you may need to delete it first
+#    if you want to force a complete rebuild.
+#
+# 3. Data Persistence: The `volumes` section ensures that your data, index, and MLflow runs
+#    are stored on your host machine and persist across container restarts.

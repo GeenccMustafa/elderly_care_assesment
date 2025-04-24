@@ -11,14 +11,9 @@ __pycache__/
 *.pyd
 
 # MLOps / Data Stores (managed by DVC or local)
+data/
 mlruns/
-vector_store_local/
-data/slide_text_data/ # Let DVC manage content, ignore direct changes if preferred
-# Or if you want Git to track the directory structure but not content:
-# data/*
-# !data/.gitkeep
-# !data/slide_text_data/
-# !data/slide_text_data/.gitkeep
+vector_store_personal/
 
 
 # IDE / OS files

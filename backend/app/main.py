@@ -1,22 +1,65 @@
-from fastapi import FastAPI
-from .api import router as api_router
-from . import services # Import to trigger model loading on startup via cache
+# backend/app/main.py
+import logging
 
-app = FastAPI(title="Classroom Captioning Backend API",
-              description="Provides transcription, context retrieval, and summarization services.",
-              version="0.1.0")
+from fastapi import FastAPI
+
+from . import config, services
+from .api import router as api_router
+
+# Set up logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO) 
+
+# Initialize FastAPI application
+app = FastAPI(
+    title="Elderly Care Assessment Assistant API",
+    description=(
+        "Provides assessment analysis based on user answers and "
+        "uploaded personal documents."
+    ),
+    version="1.0.0",
+    contact={  
+        "name": "Mustafa Genc",
+        "email": "mustafa.gencc94@gmail.com",
+    },
+)
+
 
 @app.on_event("startup")
 async def startup_event():
-    """Load models on startup to warm up cache."""
-    print("Application startup: Pre-loading models...")
-    services.get_whisper_model()
-    services.get_llama_index_query_engine()
-    services.get_gemini_model()
-    print("Model loading initiated.")
+    """
+    Handles application startup tasks.
 
-app.include_router(api_router, prefix="/api")
+    This function is executed when the FastAPI application starts.
+    It pre-loads necessary models and initializes resources to ensure they are
+    ready when the first request arrives, reducing initial request latency.
+    """
+    logger.info("Application startup: Initializing resources...")
+    try:
+        services.get_whisper_model()
+        services.get_gemini_model()
+        services.get_embedding_model()
+        services.get_llama_index_retriever()
+        logger.info("Resource initialization routines initiated successfully.")
+    except Exception as e:
+        logger.error(f"Error during startup initialization: {e}", exc_info=True)
+
+
+app.include_router(api_router, prefix="/api", tags=["API Endpoints"])
+
 
 @app.get("/", tags=["Root"])
 async def read_root():
-    return {"message": "Welcome to the Classroom Captioning Backend API. Visit /docs for details."}
+    """Provides a welcome message and basic API information."""
+    return {
+        "message": "Welcome to the Elderly Care Assessment Assistant API.",
+        "docs_url": "/docs",
+        "redoc_url": "/redoc",
+        "api_version": app.version,
+        "contact": app.contact,
+    }
+
+@app.get("/health", tags=["Health Check"])
+async def health_check():
+    """Simple health check endpoint."""
+    return {"status": "ok"}

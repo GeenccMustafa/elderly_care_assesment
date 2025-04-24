@@ -1,12 +1,34 @@
+# backend/requirements.txt
+
+# Web Framework & Server
 fastapi
-uvicorn[standard] # Includes websockets support if needed later
+uvicorn[standard] # Includes performance extras like httptools, uvloop
+python-multipart # <--- ADDED THIS LINE
+
+# Data Validation (often included with fastapi, but explicit is good)
+pydantic
+
+# Environment Variables
 python-dotenv
-faster-whisper
-torch # Or torch-cpu depending on your setup
-llama-index
-llama-index-embeddings-huggingface
-sentence-transformers
+
+# ML / AI / Data
+torch # For transformers/whisper, embeddings
+numpy # Dependency for many ML libraries
+soundfile # For reading audio files (Whisper)
+librosa # Alternative/fallback for reading audio files (Whisper)
+transformers # For Whisper model pipeline
+sentencepiece # Often needed by transformers tokenizers
+
+# Google Generative AI (Gemini)
 google-generativeai
-mlflow
-numpy
-soundfile # To read audio files easily
+
+# LlamaIndex (Vector Store/Retrieval)
+llama-index-core
+llama-index-embeddings-huggingface # Specific embedding model integration
+
+# MLflow & Pandas (for logging/tracking)
+mlflow >= 2.9.0 # Using a recent version is generally good
+pandas
+
+# HTML parsing (needed by services.py)
+# Note: 'html' is a standard library module, no need to pip install

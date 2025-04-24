@@ -1,88 +1,120 @@
-import gradio as gr
-import requests
-import numpy as np
+# app.py (Main Gradio Application Entry Point)
+
+import logging
 import os
+import socket
+import traceback
 
-# Use environment variable or hardcode for local dev
-# Assumes backend is running and accessible at this URL
-# If using docker-compose, this will be 'http://backend:8000/api/process_audio'
-BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://localhost:8000/api/process_audio")
+import gradio as gr
 
-print(f"Connecting to Backend API at: {BACKEND_API_URL}")
+from event_handlers import ICON_ERROR, ICON_INFO
+from ui_components import build_ui
 
-def process_audio_chunk(audio_filepath):
-    """
-    Sends the audio chunk (from Gradio filepath) to the backend API
-    and returns the results for Gradio components.
-    """
-    if audio_filepath is None:
-        return "[No audio input]", "", [], "[Please provide audio]"
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
-    print(f"Processing audio file: {audio_filepath}")
-
-    try:
-        # Prepare the file for the request
-        with open(audio_filepath, 'rb') as f:
-            files = {'audio_file': (os.path.basename(audio_filepath), f, 'audio/wav')} # Adjust mime type if needed
-            response = requests.post(BACKEND_API_URL, files=files, timeout=60) # Increase timeout
-
-        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
-
-        data = response.json()
-        print("Received response from backend:", data)
-
-        # Extract data for Gradio components
-        transcription = data.get("transcription", "[No transcription received]")
-        summary = data.get("summary", "")
-        context = data.get("context", []) # List of dicts
-        error = data.get("error")
-
-        if error:
-            return transcription, summary, context, f"[Backend Error: {error}]"
-        else:
-            return transcription, summary, context, f"Processed successfully." # Status message
-
-    except requests.exceptions.RequestException as e:
-        print(f"Error connecting to backend: {e}")
-        return "[Error connecting to backend]", "", [], f"[Error: {e}]"
-    except Exception as e:
-        print(f"Error processing response: {e}")
-        return "[Error processing response]", "", [], f"[Error: {e}]"
-
-# --- Gradio Interface Definition ---
-with gr.Blocks(theme=gr.themes.Soft()) as demo:
-    gr.Markdown("# 🎙️ Real-Time Classroom Captioning Demo")
-    gr.Markdown("Record audio chunks using your microphone. The audio will be sent to the backend API for processing.")
-
-    with gr.Row():
-        # Input: Microphone audio chunk
-        # type="filepath" saves audio to a temp file Gradio can access
-        mic_input = gr.Audio(sources=["microphone"], type="filepath", label="Record Audio Chunk (e.g., 5-10 seconds)")
-
-    with gr.Row():
-        # Button to trigger processing
-        submit_button = gr.Button("Process Audio Chunk")
-
-    with gr.Row():
-        # Outputs
-        with gr.Column(scale=2):
-            transcription_output = gr.Textbox(label="📜 Transcription", lines=10, interactive=False)
-        with gr.Column(scale=1):
-            summary_output = gr.Textbox(label="💡 Summary", lines=5, interactive=False)
-            context_output = gr.JSON(label="🔗 Related Context") # Display context as JSON
-            status_output = gr.Textbox(label="📊 Status", interactive=False)
+# --- Build the Gradio UI ---
+log.info("Building Gradio UI...")
+try:
+    demo = build_ui()
+    log.info("Gradio UI built successfully.")
+except Exception as e:
+    log.error(f"Fatal error during UI build: {e}", exc_info=True)
+    exit(1)
 
 
-    # Connect button click to the processing function
-    submit_button.click(
-        fn=process_audio_chunk,
-        inputs=[mic_input],
-        outputs=[transcription_output, summary_output, context_output, status_output]
+# --- Launch Configuration ---
+def get_launch_config():
+    """Retrieves launch configuration from environment variables or defaults."""
+    config = {
+        "cert_path": "cert.pem",
+        "key_path": "key.pem",
+        "server_name": os.getenv("GRADIO_SERVER_NAME", "0.0.0.0"),
+        "server_port": int(os.getenv("GRADIO_SERVER_PORT", "7860")),
+        "share": os.getenv("GRADIO_SHARE", "False").lower() == "true",
+        "debug": os.getenv("GRADIO_DEBUG", "True").lower() == "true",
+    }
+    config["use_https"] = (
+        os.path.exists(config["cert_path"]) and
+        os.path.exists(config["key_path"])
     )
+    return config
 
-    gr.Markdown("---")
-    gr.Markdown("Backend API Docs available at [http://localhost:8000/docs](http://localhost:8000/docs) (when running via docker-compose).")
-    gr.Markdown("MLflow UI available at [http://localhost:5000](http://localhost:5000) (run `mlflow ui` locally in project root).")
 
+def print_access_urls(protocol: str, host: str, port: int):
+    """Prints common URLs to access the Gradio app."""
+    base_url = f"{protocol}://{host}:{port}"
+    print(f"\n{ICON_INFO} Gradio app access URLs:")
+    if host == "0.0.0.0":
+        print(f"  - Local: {protocol}://localhost:{port} or {protocol}://127.0.0.1:{port}")
+        try:
+            # Attempt to find local network IP
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            if local_ip and not local_ip.startswith("127."):
+                 print(f"  - Network: {protocol}://{local_ip}:{port}")
+        except socket.gaierror:
+            print(f"  - Network: Could not determine local network IP.")
+    else:
+         print(f"  - Configured Host: {base_url}")
+
+
+# --- Launching the App ---
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860) # Run Gradio server
+    launch_config = get_launch_config()
+    server_name = launch_config["server_name"]
+    server_port = launch_config["server_port"]
+    share_enabled = launch_config["share"]
+    use_https = launch_config["use_https"]
+
+    # Base arguments for demo.launch()
+    launch_kwargs = {
+        "server_name": server_name,
+        "server_port": server_port,
+        "share": share_enabled,
+        "debug": launch_config["debug"],
+        # Prevent browser from opening automatically if needed
+        # "prevent_thread_lock": True, # Use if experiencing launch issues
+        # "inbrowser": False,
+    }
+
+    launch_successful = False
+    protocol = "http" # Default protocol
+
+    if use_https:
+        protocol = "https"
+        print(f"{ICON_INFO} Found certificates. Attempting HTTPS launch on {server_name}:{server_port}...")
+        https_kwargs = launch_kwargs.copy()
+        https_kwargs.update({
+            "ssl_certfile": launch_config["cert_path"],
+            "ssl_keyfile": launch_config["key_path"],
+            "ssl_verify": False  
+        })
+        try:
+            demo.launch(**https_kwargs)
+            launch_successful = True # If launch returns without error, assume success
+        except Exception as e:
+            print(f"{ICON_ERROR} ERROR launching with HTTPS: {e}")
+            print(f"{ICON_INFO} Check certificate paths and permissions.")
+            traceback.print_exc()
+            print(f"{ICON_INFO} Falling back to HTTP...")
+            use_https = False 
+            protocol = "http"
+
+    if not launch_successful:
+        print(f"{ICON_INFO} Attempting HTTP launch on {server_name}:{server_port}...")
+        try:
+            demo.launch(**launch_kwargs)
+            launch_successful = True
+        except Exception as e:
+            print(f"{ICON_ERROR} ERROR launching with HTTP: {e}")
+            traceback.print_exc()
+
+    if launch_successful:
+        print_access_urls(protocol, server_name, server_port)
+        if use_https:
+            print(f"{ICON_INFO} NOTE: If using self-signed certificates, your browser may show security warnings.")
+        if share_enabled:
+            print(f"{ICON_INFO} NOTE: A public Gradio Share link should be generated by Gradio above.")
+    else:
+        print(f"\n{ICON_ERROR} Gradio application failed to launch.")
