@@ -11,7 +11,6 @@ __pycache__/
 *.pyd
 
 # MLOps / Data Stores (managed by DVC or local)
-data/
 mlruns/
 vector_store_personal/
 

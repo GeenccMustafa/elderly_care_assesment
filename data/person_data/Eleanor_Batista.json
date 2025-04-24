@@ -1,0 +1,70 @@
+[
+    {
+        "timestamp": "2025-04-21T22:10:56.473860",
+        "answers": {
+            "1": "I have been feeling a bit more tired lately but overall my health is stable mentally I am still sharp though I get a little anxious at times",
+            "2": "I usually wake up around 7, make tea, read the newspapers, then go for a short walk. I do crossword puzzles and watch my favorite shows in the afternoon.",
+            "3": "I sometimes forget where I put things or why I entered a room but nothing measure. My doctor said it's normal for my age.",
+            "4": "I took blood-plasia medication in the morning and a cholesterol pill at night. Lissi no pril tan mg.",
+            "5": "I leave alone in a small flat. I walk most places near right and take the bus when needed. I hire help for this cleaning once a week."
+        },
+        "analysis": {
+            "cognitive": "Based on the provided assessment answers, the elderly person demonstrates some mild cognitive changes but maintains largely intact cognitive function.  They report occasional forgetfulness regarding object location and purpose, a common experience with aging,  but express no significant concerns and attribute it to normal aging.  Their daily routine indicates adequate planning and execution of activities requiring attention and memory.  There is no evidence of confusion, difficulty with language, or impaired orientation.",
+            "physical": "Based on the provided assessment answers, the elderly person demonstrates:\n\n* **Moderate mobility:** Able to walk for short distances and utilize public transportation when necessary.  No mention of assistive devices.\n* **Adequate, but possibly declining, energy levels:** Reports feeling \"a bit more tired lately,\" suggesting a potential decrease in stamina.\n* **No reported pain or falls:**  The answers do not mention any pain or history of falls.\n* **Strength levels are unclear:** While able to walk and perform ADLs (with cleaning assistance), the assessment lacks details on upper body strength or ability to perform other physical tasks.\n\n\n**Insufficient information:** The answers provide limited information regarding balance, detailed ADL performance (beyond cleaning), and the presence of any sensory impairments affecting physical function.",
+            "health": "The elderly person reports generally stable health, noting increased fatigue but maintaining mental sharpness despite occasional anxiety.  They are managing daily life independently with some assistance for cleaning, and are taking medication for blood pressure and cholesterol.  More detailed information on medication dosages and specific blood pressure/cholesterol levels is needed for a complete assessment.",
+            "personal_info": "* **Name:** Not Mentioned\n* **Age:** Not Mentioned (although the doctor's comment suggests an older age)\n* **Gender:** Not Mentioned\n* **Address:** Lives alone in a small flat. (No specific address)\n* **Living Situation:** Lives alone in a small flat.\n* **Support System:** Hires help for cleaning once a week.\n* **Transportation:** Walks most places nearby and takes the bus when needed.\n* **Assistance Needs (Tasks):** Needs help with cleaning."
+        },
+        "notifications": [
+            {
+                "note": "Categorized Actionable Notes:"
+            },
+            {
+                "note": "Medication:"
+            },
+            {
+                "note": "Clarify dosage and spelling of \"Lissi no pril tan mg\""
+            },
+            {
+                "note": "Investigate blood-plasia medication and its potential side effects (mentioned tiredness)"
+            },
+            {
+                "note": "Appointments/Scheduling:"
+            },
+            {
+                "note": "None noted in answers."
+            },
+            {
+                "note": "Cognitive Concerns:"
+            },
+            {
+                "note": "Investigate reported forgetfulness (\"I sometimes forget where I put things or why I entered a room\")"
+            },
+            {
+                "note": "Physical Needs/Limitations:"
+            },
+            {
+                "note": "None noted in answers."
+            },
+            {
+                "note": "Health Concerns:"
+            },
+            {
+                "note": "Investigate reported tiredness"
+            },
+            {
+                "note": "Social/Support Needs:"
+            },
+            {
+                "note": "None noted in answers."
+            },
+            {
+                "note": "Other Important Notes:"
+            },
+            {
+                "note": "None noted in answers."
+            }
+        ],
+        "analysis_error": null,
+        "raw_notification_output": "**Categorized Actionable Notes:**\n\n\n**Medication:**\n- Clarify dosage and spelling of \"Lissi no pril tan mg\"\n- Investigate blood-plasia medication and its potential side effects (mentioned tiredness)\n\n\n**Appointments/Scheduling:**\n- None noted in answers.\n\n\n**Cognitive Concerns:**\n- Investigate reported forgetfulness (\"I sometimes forget where I put things or why I entered a room\")\n\n\n**Physical Needs/Limitations:**\n- None noted in answers.\n\n\n**Health Concerns:**\n- Investigate reported tiredness\n\n\n**Social/Support Needs:**\n- None noted in answers.\n\n\n**Other Important Notes:**\n- None noted in answers."
+    }
+]
