@@ -69,7 +69,14 @@ GOOGLE_API_KEY=your_actual_key_here
 - Run the indexing script:
 
 ```
+# Option A: Run locally (ensure dependencies from backend/requirements.txt are installed)
 python build_index.py
+
+# Option B: Run inside the running backend container (Recommended)
+docker compose exec backend python build_index.py
+
+# AFTER running either command, you MUST restart the backend for changes to take effect:
+docker compose restart backend
 ```
 *Note: Delete vector_store_personal/ if re-indexing is needed.*
 
@@ -82,7 +89,11 @@ docker-compose up --build -d
 
 - Frontend UI: http://localhost:7860
 - Backend Docs (Swagger): http://localhost:8000/docs
-- MLflow UI: http://localhost:5000
+- MLflow UI: Run separately. Recommended command (adjust port/timeout if needed):
+  ```
+   gunicorn --workers 1 --timeout 120 --bind 0.0.0.0:5000 'mlflow.server:app'
+   Then access at http://localhost:5000
+  ```
 
 6. Stop the Services
 
