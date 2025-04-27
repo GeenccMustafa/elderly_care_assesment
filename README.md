@@ -92,8 +92,9 @@ docker-compose up --build -d
 - MLflow UI: Run separately. Recommended command (adjust port/timeout if needed):
   ```
    gunicorn --workers 1 --timeout 120 --bind 0.0.0.0:5000 'mlflow.server:app'
-   Then access at http://localhost:5000
   ```
+Then access at http://localhost:5000
+
 
 6. Stop the Services
 
